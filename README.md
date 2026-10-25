@@ -4,6 +4,8 @@
 
 BoardGuard turns a structured edit request into an isolated, validated, auditable change. It checks the project before and after the edit, compares validation findings, and rolls back when checks fail. The original project is never edited in place.
 
+**Think of it as CI for PCB edits: every change is isolated, validated, and reversible.**
+
 ## Why it matters
 
 An automation tool should provide more than a success message. BoardGuard produces a reviewable diff, before-and-after validation, rollback protection, and machine-readable evidence of what happened.
