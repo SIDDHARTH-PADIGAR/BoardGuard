@@ -1,0 +1,14 @@
+{
+  "baseline-drc.json": "bbdbcda8e27c1ceb066b229442ba4079cecd903f1328e7bbfbeaf06b80cea654",
+  "baseline-erc.json": "0ba4dcdb94cabf206866dd5f7d17be772d3e386f172f3a6316b08dfdd06bc9f2",
+  "evidence-summary.json": "bc33a4674a46e7811dd5abca3f6ae09655c48d67bf2a507072a4172c62fcdcdc",
+  "final-drc.json": "ef5427698bdfbe55c6d5eec460f42f2959bf3683381330f6582bd821b6f46ce3",
+  "final-erc.json": "1621a09d5cc9cfea5f46f5440dab5ffa7d08e4dcb0b5c99a5be9b3b5f2c99dd1",
+  "original-microphone-board.kicad_pcb": "b8ca2f61207bbf620d56df6a9bdfbb13b9cc89d3d1b16767d0ed725b8a93c9f6",
+  "pcb.diff": "9d0e22557faf5bdfc02fa4cd18667e03ab15a2f36d12ee6fcd93a28c46c3be7a",
+  "README.md.before-real-KiCad-verification": "05dbb745f38f1854a0574a319ba4b0db9cc6e45674d3a2ccb1b97c51b9da6f97",
+  "report.json": "02ceb82bc58e96c69b040ee6797fd3380f7ba3ca256ac408f327ccfab7081b6e",
+  "request.json": "665ea7c3050de468dddad447a441be248edaf2e5f01f563e8ef4014584f42c10",
+  "SOURCE.txt": "30a16b1a98dc8bfb9736b356540df422e6b342a1d288a962a7fd149ff1f825d1",
+  "verified-microphone-board.kicad_pcb": "975a2b2a8ecb644d59be50098c56c818897dd316a5d49f350453147acf2bfedb"
+}

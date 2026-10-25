@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "request_id": "demo-add-silkscreen",
+  "project_dir": "../demo_board",
+  "operation": {
+    "type": "add_silkscreen_text",
+    "file": "demo_board.kicad_pcb",
+    "text": "BOARDGUARD PASS",
+    "x_mm": 30,
+    "y_mm": 22,
+    "height_mm": 1.0
+  },
+  "approval": {
+    "approved": true,
+    "reason": "approved local demonstration change"
+  },
+  "max_retries": 1,
+  "acceptance": {
+    "text_present": true
+  }
+}

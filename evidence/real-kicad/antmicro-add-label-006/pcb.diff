@@ -1,0 +1,8 @@
+--- original/hardware/microphone-board.kicad_pcb
++++ verified/hardware/microphone-board.kicad_pcb
+@@ -35685,4 +35685,5 @@
+ 			fb2c88a3-1405-413f-aa07-2e49fc72c722
+ 		)
+ 	)
++  (gr_text "BG" (at 243.4 149.2) (layer "F.SilkS") (uuid "3623b838-cfff-59dd-8283-6bdb6ebc6d8b") (effects (font (size 0.7 0.7) (thickness 0.15))))
+ )

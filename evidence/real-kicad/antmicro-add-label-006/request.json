@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "request_id": "antmicro-add-label-006",
+  "project_dir": "../antmicro_microphone",
+  "operation": {
+    "type": "add_silkscreen_text",
+    "file": "hardware/microphone-board.kicad_pcb",
+    "text": "BG",
+    "x_mm": 243.4,
+    "y_mm": 149.2,
+    "height_mm": 0.7
+  },
+  "approval": {
+    "approved": true,
+    "reason": "approved reference-board silkscreen annotation"
+  },
+  "max_retries": 1,
+  "acceptance": {
+    "text_present": true
+  }
+}

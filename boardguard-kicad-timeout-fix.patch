@@ -1,0 +1,178 @@
+diff --git a/README.md b/README.md
+index 63ea296..e663983 100644
+--- a/README.md
++++ b/README.md
+@@ -29,6 +29,8 @@ boardguard run examples/requests/antmicro_add_silk.json --backend kicad --approv
+ 
+ The fetch script downloads and verifies Git blob hashes for the Antmicro PDM microphone-board PCB, schematic, project, design rules, and Apache-2.0 license from a pinned Copperbench commit. See `examples/antmicro_microphone/SOURCE.txt` after fetching. The board request adds small `F.SilkS` text within the outline. KiCad's missing upstream symbol/footprint libraries may produce **pre-existing** warnings; BoardGuard checks for new violations rather than requiring a clean report.
+ 
++KiCad DRC/ERC commands have a **180-second per-command timeout** by default. Override it for larger designs in PowerShell with `$env:BOARDGUARD_KICAD_TIMEOUT_SECONDS = "240"`. The validator inherits the current OS/user environment so KiCad can find its normal configuration and library paths. If validation still times out or produces an invalid report, BoardGuard refuses to proceed.
++
+ On the build machine, `kicad-cli` was absent and package installation timed out. Real ERC/DRC execution has therefore **not been verified here**. If validation was blocked by an unavailable tool, install KiCad then retry the same request ID with `boardguard resume antmicro-add-label-001 --request examples/requests/antmicro_add_silk.json --backend kicad --approve`.
+ 
+ ## Safety and execution model
+diff --git a/src/boardguard/validator.py b/src/boardguard/validator.py
+index 11373e7..f906b92 100644
+--- a/src/boardguard/validator.py
++++ b/src/boardguard/validator.py
+@@ -1,6 +1,8 @@
+ from __future__ import annotations
+ 
+ import json
++import math
++import os
+ import shutil
+ import subprocess
+ import time
+@@ -60,9 +62,32 @@ def _walk_violations(obj: Any) -> list[Violation]:
+ class KiCadCliValidator:
+     """Runs real kicad-cli DRC and ERC when schematics exist; missing tools never pass."""
+ 
+-    def __init__(self, executable: str | None = None, timeout_seconds: float = 45.0):
+-        self.executable = executable or __import__("os").environ.get("BOARDGUARD_KICAD_CLI") or shutil.which("kicad-cli")
+-        self.timeout_seconds = timeout_seconds
++    DEFAULT_TIMEOUT_SECONDS = 180.0
++    TIMEOUT_ENV_VAR = "BOARDGUARD_KICAD_TIMEOUT_SECONDS"
++
++    def __init__(self, executable: str | None = None, timeout_seconds: float | None = None):
++        self.executable = (
++            executable
++            or os.environ.get("BOARDGUARD_KICAD_CLI")
++            or shutil.which("kicad-cli")
++        )
++        if timeout_seconds is None:
++            configured_timeout = os.environ.get(self.TIMEOUT_ENV_VAR)
++            try:
++                timeout_seconds = (
++                    self.DEFAULT_TIMEOUT_SECONDS
++                    if configured_timeout is None
++                    else float(configured_timeout)
++                )
++            except ValueError as exc:
++                raise ValueError(
++                    f"{self.TIMEOUT_ENV_VAR} must be a positive finite number of seconds"
++                ) from exc
++        if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
++            raise ValueError(
++                f"timeout_seconds must be a positive finite number; got {timeout_seconds!r}"
++            )
++        self.timeout_seconds = float(timeout_seconds)
+ 
+     def _run_report(self, command: list[str], cwd: Path, report: Path, prefix: str) -> tuple[bool, int | None, list[Violation], float, str | None, dict[str, Any], dict[str, Any]]:
+         tool_input = {"command": command, "cwd": str(cwd), "timeout_seconds": self.timeout_seconds}
+@@ -78,10 +103,30 @@ class KiCadCliValidator:
+                 timeout=self.timeout_seconds,
+                 check=False,
+                 shell=False,
+-                env={"PATH": __import__("os").environ.get("PATH", ""), "HOME": str(Path.home()), "LANG": "C.UTF-8"},
++                # Inherit the user environment so KiCad can locate Windows user settings,
++                # temporary directories, and any configured KiCad library paths.
++            )
++        except subprocess.TimeoutExpired as exc:
++            def partial_text(value: str | bytes | None) -> str:
++                if isinstance(value, bytes):
++                    return value.decode("utf-8", errors="replace")
++                return value if isinstance(value, str) else ""
++
++            timeout_output = {
++                "timeout": True,
++                "timeout_seconds": self.timeout_seconds,
++                "stdout": partial_text(exc.stdout)[:3000],
++                "stderr": partial_text(exc.stderr)[:3000],
++            }
++            return (
++                False,
++                None,
++                [],
++                (time.perf_counter() - started) * 1000,
++                f"timed out after {self.timeout_seconds:g}s",
++                tool_input,
++                timeout_output,
+             )
+-        except subprocess.TimeoutExpired:
+-            return False, None, [], (time.perf_counter() - started) * 1000, f"timed out after {self.timeout_seconds:g}s", tool_input, {"timeout": True}
+         except OSError as exc:
+             return False, None, [], (time.perf_counter() - started) * 1000, f"could not start validator: {exc}", tool_input, {"error": str(exc)}
+         elapsed = (time.perf_counter() - started) * 1000
+diff --git a/tests/test_benchmark_and_kicad_adapter.py b/tests/test_benchmark_and_kicad_adapter.py
+index d9869ff..2ed725c 100644
+--- a/tests/test_benchmark_and_kicad_adapter.py
++++ b/tests/test_benchmark_and_kicad_adapter.py
+@@ -27,6 +27,77 @@ def test_real_validator_reports_missing_executable_instead_of_passing(tmp_path:
+     assert "could not start validator" in report.error
+ 
+ 
++def test_real_validator_uses_configurable_default_timeout_and_inherits_environment(
++    tmp_path: Path, monkeypatch
++):
++    import subprocess
++
++    fixture = Path(__file__).resolve().parents[1] / "examples" / "demo_board"
++    report_path = tmp_path / "reports" / "demo_board-drc.json"
++    observed_kwargs = {}
++
++    def fake_run(command, **kwargs):
++        observed_kwargs.update(kwargs)
++        report_path.parent.mkdir(parents=True, exist_ok=True)
++        report_path.write_text(
++            json.dumps({"violations": [], "unconnected_items": []}), encoding="utf-8"
++        )
++        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
++
++    monkeypatch.delenv("BOARDGUARD_KICAD_TIMEOUT_SECONDS", raising=False)
++    monkeypatch.setattr(subprocess, "run", fake_run)
++    validator = KiCadCliValidator(executable="kicad-cli")
++    report = validator.validate(fixture, fixture / "demo_board.kicad_pcb", tmp_path / "reports")
++
++    assert report.available is True
++    assert validator.timeout_seconds == 180.0
++    assert observed_kwargs["timeout"] == 180.0
++    # Omitting env= is intentional: subprocess inherits APPDATA, USERPROFILE,
++    # TEMP, KICAD_CONFIG_HOME, and other OS/user configuration by default.
++    assert "env" not in observed_kwargs
++
++
++def test_real_validator_timeout_can_be_overridden_by_environment(monkeypatch):
++    monkeypatch.setenv("BOARDGUARD_KICAD_TIMEOUT_SECONDS", "240")
++    assert KiCadCliValidator(executable="kicad-cli").timeout_seconds == 240.0
++
++
++def test_real_validator_rejects_invalid_timeout_configuration(monkeypatch):
++    import pytest
++
++    for value in ("0", "-1", "nan", "inf", "not-a-number"):
++        monkeypatch.setenv("BOARDGUARD_KICAD_TIMEOUT_SECONDS", value)
++        with pytest.raises(ValueError, match="positive finite"):
++            KiCadCliValidator(executable="kicad-cli")
++
++
++def test_real_validator_fails_closed_when_command_times_out(tmp_path: Path, monkeypatch):
++    import subprocess
++
++    fixture = Path(__file__).resolve().parents[1] / "examples" / "demo_board"
++
++    def fake_run(command, **kwargs):
++        raise subprocess.TimeoutExpired(
++            command,
++            timeout=kwargs["timeout"],
++            output=b"partial stdout",
++            stderr=b"partial stderr",
++        )
++
++    monkeypatch.setattr(subprocess, "run", fake_run)
++    validator = KiCadCliValidator(executable="kicad-cli", timeout_seconds=0.1)
++    report = validator.validate(fixture, fixture / "demo_board.kicad_pcb", tmp_path / "reports")
++
++    assert report.available is False
++    assert report.exit_code is None
++    assert "timed out after 0.1s" in report.error
++    timeout_output = report.tool_output["commands"][0]
++    assert timeout_output["timeout"] is True
++    assert timeout_output["timeout_seconds"] == 0.1
++    assert timeout_output["stdout"] == "partial stdout"
++    assert timeout_output["stderr"] == "partial stderr"
++
++
+ def test_new_violation_delta_preserves_duplicate_counts():
+     baseline = ValidationReport(True, "test", 0, [Violation("error", "clearance", "same", "stable")])
+     after = ValidationReport(True, "test", 1, [Violation("error", "clearance", "same", "stable"),

@@ -1,0 +1,84 @@
+# BoardGuard
+
+**A local-first reliability loop for controlled KiCad edits.** BoardGuard accepts a structured request, copies the project, executes one typed edit, runs baseline and post-edit validation, compares violation deltas, and either records a verified outcome or rolls back to a saved checkpoint. The original project is never edited in place.
+
+## Quick start
+
+Python 3.11+; no paid API, model, or third-party runtime dependency. The `test` extra installs `pytest`.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[test]"
+boardguard demo
+python -m pytest
+boardguard benchmark --repeats 3 --output evaluation/latest.json
+```
+
+The offline `demo` uses an explicitly named fault-injection simulator, **not KiCad**. Inspect `.boardguard-workspaces/` for `report.json`, `trace.jsonl`, `changes.patch`, and the pre-edit checkpoint. `boardguard inspect examples/demo_board` prints a file inventory and SHA-256 hashes.
+
+## Run against a real KiCad project
+
+Install [KiCad 8+](https://www.kicad.org/download/) and ensure `kicad-cli` is on `PATH`. The repository includes a small, self-authored software fixture for offline tests. To retrieve a real, legally reusable reference design, run the optional downloader (requires internet access):
+
+```powershell
+python scripts/fetch_reference_project.py
+kicad-cli version
+boardguard run examples/requests/antmicro_add_silk.json --backend kicad --approve
+```
+
+The fetch script downloads and verifies Git blob hashes for the Antmicro PDM microphone-board PCB, schematic, project, design rules, and Apache-2.0 license from a pinned Copperbench commit. See `examples/antmicro_microphone/SOURCE.txt` after fetching. The board request adds small `F.SilkS` text within the outline. KiCad's missing upstream symbol/footprint libraries may produce **pre-existing** warnings; BoardGuard checks for new violations rather than requiring a clean report.
+
+KiCad DRC/ERC commands have a **180-second per-command timeout** by default. Override it for larger designs in PowerShell with `$env:BOARDGUARD_KICAD_TIMEOUT_SECONDS = "240"`. The validator inherits the current OS/user environment so KiCad can find its normal configuration and library paths. If validation still times out or produces an invalid report, BoardGuard refuses to proceed.
+
+On the build machine, `kicad-cli` was absent and package installation timed out. Real ERC/DRC execution has therefore **not been verified here**. If validation was blocked by an unavailable tool, install KiCad then retry the same request ID with `boardguard resume antmicro-add-label-001 --request examples/requests/antmicro_add_silk.json --backend kicad --approve`.
+
+## Safety and execution model
+
+```text
+request + explicit approval → inspect → isolated copy → baseline ERC/DRC
+            → typed F.SilkS edit → persisted-state reflection → post ERC/DRC
+            → compare violations → VERIFIED, or rollback + human review
+```
+
+- One allowed mutation: add simple non-electrical `F.SilkS` text inside a parsed `Edge.Cuts` bounding box. No arbitrary shell commands or free-form file writes.
+- Deterministic policy, input validation, path/size limits, symlink rejection, explicit CLI approval, bounded validation retries, source-hash manifests, SQLite checkpoints, request idempotency, a verified full-project rollback snapshot, and secret-redacted JSONL traces.
+- Missing tools, timeouts, malformed reports, new violations, or unexpected file changes do not pass. A successful check is **not** a claim that the design is electrically correct.
+- One sequential executor is intentional: this single-file workflow is dependency-ordered. Worker fan-out would create races and has no demonstrated benefit here.
+
+## Offline fault-injection benchmark
+
+Command: `boardguard benchmark --repeats 3 --output evaluation/latest.json`.
+
+Nine scenarios run three times each against a deliberately naive one-pass baseline. Both paths use the same deterministic simulator. This is control-flow evidence, not real-world or KiCad validation.
+
+Measured in this environment, 27 runs per approach:
+
+| Metric | Naive baseline | BoardGuard |
+|---|---:|---:|
+| Task completion under benchmark criteria | 11.1% | 44.4% |
+| Newly introduced violations left behind | 3 | 0 |
+| Rollbacks successful when required | 0/6 | 6/6 |
+| Duplicate requests prevented | 0/3 | 3/3 |
+| Human-escalation accuracy | 44.4% | 100% |
+| Mean elapsed time per scenario | 0.894 ms | 31.056 ms |
+| Median elapsed time per scenario | 0.884 ms | 34.217 ms |
+| Mean logical tool calls | 2.22 | 2.56 |
+
+BoardGuard took 31.056 ms per scenario on average versus 0.894 ms for the naive baseline in this run. That is deliberate overhead from copy/hash checks, state persistence, repeated validation, and audit artifacts, not a speedup. The guarded path met the tested safety criteria more reliably at the cost of latency. This sample is only 27 simulator runs per approach; the timings are machine-dependent and exclude real KiCad startup/DRC/ERC latency. Results and per-stage timings are recorded in `evaluation/latest.json`.
+
+## Limits and next proof needed
+
+- Only silkscreen annotation is implemented. No routing, schematic, net, footprint, zone, or manufacturing-file changes.
+- The bundled miniature board is a software test fixture, not a functional circuit. The separate Antmicro reference project must be fetched before the real-board command above can run.
+- KiCad JSON report handling is defensive but was not exercised in this environment. Unknown schemas fail closed.
+- Workspace isolation is a controlled filesystem copy, **not** an OS/container security sandbox. The only external command is a fixed `kicad-cli` invocation with `shell=False`.
+- Recovery restores the complete verified pre-edit copy. It does not repair an electrical violation automatically; it rolls back and escalates instead.
+
+## Copperhead fit
+
+Copperhead's [AI Infrastructure role](https://copperhead.sh/careers/founding-software-engineer/) calls out sandboxing, stateful execution, retries/idempotency, observability, and evaluation. Its public [copperhead](https://github.com/copperheadhq/copperhead) repository already contains the design-agent workflow, while [copperbench](https://github.com/copperheadhq/copperbench) benchmarks verified hardware edits. BoardGuard demonstrates the operational reliability layer around a narrowly scoped edit, rather than duplicating the agent or benchmark.
+
+## License
+
+BoardGuard code and self-authored software fixture: MIT. The optional fetched hardware project retains its upstream Apache-2.0 license and attribution; the downloader stores the license alongside that project.

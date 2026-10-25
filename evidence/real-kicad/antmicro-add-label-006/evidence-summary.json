@@ -1,0 +1,36 @@
+{
+  "captured_at_local": "2026-10-25T22:08:49+05:30",
+  "run_id": "antmicro-add-label-006",
+  "status": "VERIFIED",
+  "operation": {
+    "type": "add_silkscreen_text",
+    "text": "BG",
+    "layer": "F.SilkS",
+    "x_mm": 243.4,
+    "y_mm": 149.2,
+    "height_mm": 0.7
+  },
+  "kicad_version": "10.0.7",
+  "baseline_drc": {
+    "violations": 13,
+    "unconnected_items": 0,
+    "schematic_parity_issues": 0
+  },
+  "final_drc": {
+    "violations": 13,
+    "unconnected_items": 0,
+    "schematic_parity_issues": 0
+  },
+  "baseline_erc_violations": 44,
+  "final_erc_violations": 44,
+  "new_violations_reported_by_boardguard": [],
+  "changed_files_reported_by_boardguard": [
+    "hardware/microphone-board.kicad_pcb"
+  ],
+  "project_preserved_reported_by_boardguard": true,
+  "pcb_diff_added_lines": 1,
+  "pcb_diff_removed_lines": 0,
+  "source_board_sha256": "b8ca2f61207bbf620d56df6a9bdfbb13b9cc89d3d1b16767d0ed725b8a93c9f6",
+  "verified_board_sha256": "975a2b2a8ecb644d59be50098c56c818897dd316a5d49f350453147acf2bfedb",
+  "note": "VERIFIED means the requested annotation persisted and introduced no new DRC/ERC violations relative to this baseline. It is not a certification of overall electrical correctness. Existing missing Antmicro symbol/footprint library warnings remain."
+}

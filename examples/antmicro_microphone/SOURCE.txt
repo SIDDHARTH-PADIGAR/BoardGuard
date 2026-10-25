@@ -1,0 +1,12 @@
+Reference project attribution
+
+Upstream project: https://github.com/antmicro/pdm-microphone-board
+Upstream commit: 20813e2bc99f52837a780334b16a30c2afb7644c
+Author: Antmicro, Copyright (c) 2024-2025
+License: Apache-2.0 (full text in LICENSE-ANTMICRO.txt)
+Source fixture: https://github.com/copperheadhq/copperbench/tree/09863d77aa87b86c8764db73964b256c7ce8b020/fixtures/antmicro-microphone-board
+Source pinned Copperbench commit: 09863d77aa87b86c8764db73964b256c7ce8b020
+
+The KiCad design files are fetched byte-for-byte from Copperbench's pinned
+fixture. This script checks their Git blob object hashes before writing them.
+BoardGuard does not claim authorship of the hardware design.

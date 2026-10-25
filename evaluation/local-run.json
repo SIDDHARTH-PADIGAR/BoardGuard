@@ -1,0 +1,1437 @@
+{
+  "benchmark": "BoardGuard offline fault-injection benchmark",
+  "methodology": {
+    "baseline": "Unguarded one-pass executor: mutates a copy, validates once, and has no approval gate, baseline comparison, retries, rollback, or idempotency ledger.",
+    "boardguard": "Current BoardGuard workflow using the deterministic simulator and typed text annotation tool; request/task fixtures are paired with the baseline starting state.",
+    "known_metric_note": "Elapsed time is machine- and load-dependent. Tool-call counts are logical operations, not network or model calls.",
+    "paired": true,
+    "success_definition": "VERIFIED with the requested text persisted, validator available, no new violations relative to baseline, and original project unchanged.",
+    "timing": "Wall-clock time measured in this process, per task; includes Python/SQLite overhead. It excludes KiCad startup because this benchmark uses the offline simulator.",
+    "validation": "Simulated fault injection only. This is not evidence of real KiCad correctness or real-world production reliability."
+  },
+  "repeats_per_scenario": 3,
+  "results": {
+    "baseline": {
+      "completion_rate": 0.1111,
+      "duplicate_request_action_prevention": {
+        "attempts": 3,
+        "prevented": 0,
+        "rate": 0.0
+      },
+      "human_escalation_accuracy": 0.4444,
+      "mean_elapsed_ms": 17.51,
+      "mean_recovery_ms_when_attempted": 0.0,
+      "mean_tool_calls": 2.222,
+      "newly_introduced_violations_left_in_workspace": 3,
+      "p50_elapsed_ms": 15.692,
+      "rollback_success_rate_when_required": 0.0,
+      "rollback_successes": 0,
+      "runs": 27,
+      "stage_latency_ms_mean": {
+        "apply_ms": 0.679,
+        "recovery_ms": 0.0,
+        "validation_ms": 16.776
+      }
+    },
+    "boardguard": {
+      "completion_rate": 0.4444,
+      "duplicate_request_action_prevention": {
+        "attempts": 3,
+        "prevented": 3,
+        "rate": 1.0
+      },
+      "human_escalation_accuracy": 1.0,
+      "mean_elapsed_ms": 88.511,
+      "mean_recovery_ms_when_attempted": 21.562,
+      "mean_tool_calls": 2.556,
+      "newly_introduced_violations_left_in_workspace": 0,
+      "p50_elapsed_ms": 100.481,
+      "rollback_success_rate_when_required": 1.0,
+      "rollback_successes": 6,
+      "runs": 27,
+      "stage_latency_ms_mean": {
+        "baseline_validation_ms": 1.822,
+        "copy_ms": 31.225,
+        "edit_ms": 2.949,
+        "inspect_ms": 3.689,
+        "plan_ms": 2.322,
+        "policy_ms": 0.002,
+        "post_validation_ms": 1.896,
+        "recovery_ms": 4.792,
+        "reflection_ms": 3.26,
+        "report_ms": 1.309
+      }
+    }
+  },
+  "runs": {
+    "baseline": [
+      {
+        "changed": true,
+        "completed": true,
+        "elapsed_ms": 23.842,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "clean_success",
+        "stage_latency_ms": {
+          "apply_ms": 0.575,
+          "recovery_ms": 0.0,
+          "validation_ms": 23.205
+        },
+        "status": "COMPLETED",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 21.827,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "preexisting_violation",
+        "stage_latency_ms": {
+          "apply_ms": 0.547,
+          "recovery_ms": 0.0,
+          "validation_ms": 21.221
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": [
+          "baseline:error:sim_baseline_rule"
+        ]
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 16.21,
+        "human_escalation": false,
+        "persisted_new_violations": 1,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "introduced_violation",
+        "stage_latency_ms": {
+          "apply_ms": 0.645,
+          "recovery_ms": 0.0,
+          "validation_ms": 15.491
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": [
+          "new:error:sim_clearance"
+        ]
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 13.335,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "transient_validator_failure",
+        "stage_latency_ms": {
+          "apply_ms": 0.633,
+          "recovery_ms": 0.0,
+          "validation_ms": 12.646
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 16.882,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "persistent_post_failure",
+        "stage_latency_ms": {
+          "apply_ms": 0.603,
+          "recovery_ms": 0.0,
+          "validation_ms": 16.227
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 15.905,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "validator_unavailable",
+        "stage_latency_ms": {
+          "apply_ms": 0.868,
+          "recovery_ms": 0.0,
+          "validation_ms": 14.976
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 16.146,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "missing_approval",
+        "stage_latency_ms": {
+          "apply_ms": 0.615,
+          "recovery_ms": 0.0,
+          "validation_ms": 15.475
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 16.467,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "out_of_bounds",
+        "stage_latency_ms": {
+          "apply_ms": 0.62,
+          "recovery_ms": 0.0,
+          "validation_ms": 15.795
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 33.225,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "duplicate_request",
+        "stage_latency_ms": {
+          "apply_ms": 1.293,
+          "recovery_ms": 0.0,
+          "validation_ms": 31.846
+        },
+        "status": "FAILED_DUPLICATE_ACTION",
+        "text_occurrences": 2,
+        "tool_calls": 4,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": true,
+        "elapsed_ms": 15.978,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "clean_success",
+        "stage_latency_ms": {
+          "apply_ms": 0.596,
+          "recovery_ms": 0.0,
+          "validation_ms": 15.336
+        },
+        "status": "COMPLETED",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 15.109,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "preexisting_violation",
+        "stage_latency_ms": {
+          "apply_ms": 0.628,
+          "recovery_ms": 0.0,
+          "validation_ms": 14.435
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": [
+          "baseline:error:sim_baseline_rule"
+        ]
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 14.502,
+        "human_escalation": false,
+        "persisted_new_violations": 1,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "introduced_violation",
+        "stage_latency_ms": {
+          "apply_ms": 0.603,
+          "recovery_ms": 0.0,
+          "validation_ms": 13.854
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": [
+          "new:error:sim_clearance"
+        ]
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 14.617,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "transient_validator_failure",
+        "stage_latency_ms": {
+          "apply_ms": 0.6,
+          "recovery_ms": 0.0,
+          "validation_ms": 13.972
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 14.518,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "persistent_post_failure",
+        "stage_latency_ms": {
+          "apply_ms": 0.589,
+          "recovery_ms": 0.0,
+          "validation_ms": 13.885
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 13.168,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "validator_unavailable",
+        "stage_latency_ms": {
+          "apply_ms": 0.567,
+          "recovery_ms": 0.0,
+          "validation_ms": 12.556
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 14.546,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "missing_approval",
+        "stage_latency_ms": {
+          "apply_ms": 0.578,
+          "recovery_ms": 0.0,
+          "validation_ms": 13.924
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 14.311,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "out_of_bounds",
+        "stage_latency_ms": {
+          "apply_ms": 0.591,
+          "recovery_ms": 0.0,
+          "validation_ms": 13.673
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 32.437,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "duplicate_request",
+        "stage_latency_ms": {
+          "apply_ms": 1.231,
+          "recovery_ms": 0.0,
+          "validation_ms": 31.118
+        },
+        "status": "FAILED_DUPLICATE_ACTION",
+        "text_occurrences": 2,
+        "tool_calls": 4,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": true,
+        "elapsed_ms": 15.692,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "clean_success",
+        "stage_latency_ms": {
+          "apply_ms": 0.562,
+          "recovery_ms": 0.0,
+          "validation_ms": 15.085
+        },
+        "status": "COMPLETED",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 15.925,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "preexisting_violation",
+        "stage_latency_ms": {
+          "apply_ms": 0.631,
+          "recovery_ms": 0.0,
+          "validation_ms": 15.248
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": [
+          "baseline:error:sim_baseline_rule"
+        ]
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 14.499,
+        "human_escalation": false,
+        "persisted_new_violations": 1,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "introduced_violation",
+        "stage_latency_ms": {
+          "apply_ms": 0.563,
+          "recovery_ms": 0.0,
+          "validation_ms": 13.891
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": [
+          "new:error:sim_clearance"
+        ]
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 14.818,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "transient_validator_failure",
+        "stage_latency_ms": {
+          "apply_ms": 0.599,
+          "recovery_ms": 0.0,
+          "validation_ms": 14.17
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 14.213,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "persistent_post_failure",
+        "stage_latency_ms": {
+          "apply_ms": 0.57,
+          "recovery_ms": 0.0,
+          "validation_ms": 13.596
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 13.404,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "validator_unavailable",
+        "stage_latency_ms": {
+          "apply_ms": 0.569,
+          "recovery_ms": 0.0,
+          "validation_ms": 12.79
+        },
+        "status": "TOOL_UNAVAILABLE",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": false,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 15.318,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "missing_approval",
+        "stage_latency_ms": {
+          "apply_ms": 0.569,
+          "recovery_ms": 0.0,
+          "validation_ms": 14.669
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 15.934,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "out_of_bounds",
+        "stage_latency_ms": {
+          "apply_ms": 0.629,
+          "recovery_ms": 0.0,
+          "validation_ms": 15.261
+        },
+        "status": "FAILED_VALIDATION",
+        "text_occurrences": 1,
+        "tool_calls": 2,
+        "validation_available": true,
+        "violations": []
+      },
+      {
+        "changed": true,
+        "completed": false,
+        "elapsed_ms": 29.954,
+        "human_escalation": false,
+        "persisted_new_violations": 0,
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "duplicate_request",
+        "stage_latency_ms": {
+          "apply_ms": 1.254,
+          "recovery_ms": 0.0,
+          "validation_ms": 28.612
+        },
+        "status": "FAILED_DUPLICATE_ACTION",
+        "text_occurrences": 2,
+        "tool_calls": 4,
+        "validation_available": true,
+        "violations": []
+      }
+    ],
+    "boardguard": [
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 122.461,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "clean_success",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.559,
+          "copy_ms": 41.008,
+          "edit_ms": 5.959,
+          "inspect_ms": 5.98,
+          "plan_ms": 2.934,
+          "policy_ms": 0.003,
+          "post_validation_ms": 2.54,
+          "reflection_ms": 6.454,
+          "report_ms": 1.42
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 1,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 101.852,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "preexisting_violation",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 3.698,
+          "copy_ms": 34.525,
+          "edit_ms": 4.256,
+          "inspect_ms": 4.129,
+          "plan_ms": 2.444,
+          "policy_ms": 0.003,
+          "post_validation_ms": 2.85,
+          "reflection_ms": 4.739,
+          "report_ms": 1.523
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": false,
+        "elapsed_ms": 123.302,
+        "human_escalation": true,
+        "new_violations": [
+          "new:error:sim_clearance"
+        ],
+        "persisted_new_violations": 0,
+        "recovery": "restored_full_workspace_checkpoint",
+        "recovery_ms": 21.294,
+        "repeat": 1,
+        "rollback_succeeded": true,
+        "scenario": "introduced_violation",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.185,
+          "copy_ms": 36.181,
+          "edit_ms": 4.438,
+          "inspect_ms": 4.336,
+          "plan_ms": 2.296,
+          "policy_ms": 0.002,
+          "post_validation_ms": 2.712,
+          "recovery_ms": 21.294,
+          "reflection_ms": 4.848,
+          "report_ms": 1.552
+        },
+        "status": "ROLLED_BACK",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 104.572,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "transient_validator_failure",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.206,
+          "copy_ms": 36.559,
+          "edit_ms": 4.074,
+          "inspect_ms": 4.479,
+          "plan_ms": 2.444,
+          "policy_ms": 0.003,
+          "post_validation_ms": 4.132,
+          "reflection_ms": 4.542,
+          "report_ms": 1.404
+        },
+        "status": "VERIFIED",
+        "tool_calls": 4,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": false,
+        "elapsed_ms": 116.464,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "restored_full_workspace_checkpoint",
+        "recovery_ms": 21.253,
+        "repeat": 1,
+        "rollback_succeeded": true,
+        "scenario": "persistent_post_failure",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.259,
+          "copy_ms": 34.999,
+          "edit_ms": 4.494,
+          "inspect_ms": 4.14,
+          "plan_ms": 2.181,
+          "policy_ms": 0.002,
+          "post_validation_ms": 2.73,
+          "recovery_ms": 21.253,
+          "reflection_ms": 4.557,
+          "report_ms": 1.384
+        },
+        "status": "VALIDATION_UNAVAILABLE",
+        "tool_calls": 4,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 64.013,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "validator_unavailable",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 0.36,
+          "copy_ms": 33.398,
+          "inspect_ms": 3.899,
+          "plan_ms": 2.113,
+          "policy_ms": 0.003,
+          "report_ms": 1.138
+        },
+        "status": "VALIDATION_UNAVAILABLE",
+        "tool_calls": 1,
+        "validation_available": false
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 10.478,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "missing_approval",
+        "stage_latency_ms": {
+          "plan_ms": 2.318,
+          "policy_ms": 0.008,
+          "report_ms": 1.001
+        },
+        "status": "NEEDS_APPROVAL",
+        "tool_calls": 0,
+        "validation_available": false
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 75.72,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "out_of_bounds",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.149,
+          "copy_ms": 36.385,
+          "edit_ms": 1.375,
+          "inspect_ms": 4.403,
+          "plan_ms": 2.474,
+          "policy_ms": 0.003,
+          "report_ms": 1.541
+        },
+        "status": "REJECTED",
+        "tool_calls": 2,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 98.212,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 1,
+        "rollback_succeeded": false,
+        "scenario": "duplicate_request",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.312,
+          "copy_ms": 33.166,
+          "edit_ms": 4.006,
+          "inspect_ms": 4.17,
+          "plan_ms": 2.357,
+          "policy_ms": 0.001,
+          "post_validation_ms": 2.909,
+          "reflection_ms": 4.732,
+          "report_ms": 1.272
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 103.612,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "clean_success",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.012,
+          "copy_ms": 36.048,
+          "edit_ms": 4.256,
+          "inspect_ms": 4.283,
+          "plan_ms": 2.067,
+          "policy_ms": 0.001,
+          "post_validation_ms": 2.554,
+          "reflection_ms": 5.556,
+          "report_ms": 1.296
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 1,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 102.935,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "preexisting_violation",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.561,
+          "copy_ms": 33.888,
+          "edit_ms": 4.221,
+          "inspect_ms": 4.459,
+          "plan_ms": 2.19,
+          "policy_ms": 0.002,
+          "post_validation_ms": 2.47,
+          "reflection_ms": 4.517,
+          "report_ms": 1.454
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": false,
+        "elapsed_ms": 118.19,
+        "human_escalation": true,
+        "new_violations": [
+          "new:error:sim_clearance"
+        ],
+        "persisted_new_violations": 0,
+        "recovery": "restored_full_workspace_checkpoint",
+        "recovery_ms": 20.747,
+        "repeat": 2,
+        "rollback_succeeded": true,
+        "scenario": "introduced_violation",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.288,
+          "copy_ms": 33.691,
+          "edit_ms": 4.072,
+          "inspect_ms": 4.041,
+          "plan_ms": 2.807,
+          "policy_ms": 0.002,
+          "post_validation_ms": 2.525,
+          "recovery_ms": 20.747,
+          "reflection_ms": 4.782,
+          "report_ms": 1.437
+        },
+        "status": "ROLLED_BACK",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 100.481,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "transient_validator_failure",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.375,
+          "copy_ms": 33.925,
+          "edit_ms": 4.032,
+          "inspect_ms": 4.208,
+          "plan_ms": 2.404,
+          "policy_ms": 0.002,
+          "post_validation_ms": 3.969,
+          "reflection_ms": 4.706,
+          "report_ms": 1.263
+        },
+        "status": "VERIFIED",
+        "tool_calls": 4,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": false,
+        "elapsed_ms": 112.587,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "restored_full_workspace_checkpoint",
+        "recovery_ms": 21.28,
+        "repeat": 2,
+        "rollback_succeeded": true,
+        "scenario": "persistent_post_failure",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.031,
+          "copy_ms": 33.981,
+          "edit_ms": 3.984,
+          "inspect_ms": 4.055,
+          "plan_ms": 2.093,
+          "policy_ms": 0.002,
+          "post_validation_ms": 2.617,
+          "recovery_ms": 21.28,
+          "reflection_ms": 4.637,
+          "report_ms": 1.341
+        },
+        "status": "VALIDATION_UNAVAILABLE",
+        "tool_calls": 4,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 64.457,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "validator_unavailable",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 0.303,
+          "copy_ms": 33.649,
+          "inspect_ms": 3.808,
+          "plan_ms": 2.703,
+          "policy_ms": 0.001,
+          "report_ms": 1.106
+        },
+        "status": "VALIDATION_UNAVAILABLE",
+        "tool_calls": 1,
+        "validation_available": false
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 9.765,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "missing_approval",
+        "stage_latency_ms": {
+          "plan_ms": 2.114,
+          "policy_ms": 0.006,
+          "report_ms": 0.989
+        },
+        "status": "NEEDS_APPROVAL",
+        "tool_calls": 0,
+        "validation_available": false
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 75.151,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "out_of_bounds",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.882,
+          "copy_ms": 36.744,
+          "edit_ms": 1.101,
+          "inspect_ms": 3.75,
+          "plan_ms": 2.07,
+          "policy_ms": 0.001,
+          "report_ms": 1.124
+        },
+        "status": "REJECTED",
+        "tool_calls": 2,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 102.659,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 2,
+        "rollback_succeeded": false,
+        "scenario": "duplicate_request",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.074,
+          "copy_ms": 37.75,
+          "edit_ms": 4.323,
+          "inspect_ms": 3.856,
+          "plan_ms": 2.174,
+          "policy_ms": 0.002,
+          "post_validation_ms": 2.275,
+          "reflection_ms": 4.573,
+          "report_ms": 1.255
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 95.056,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "clean_success",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 1.972,
+          "copy_ms": 33.377,
+          "edit_ms": 3.823,
+          "inspect_ms": 3.886,
+          "plan_ms": 2.077,
+          "policy_ms": 0.002,
+          "post_validation_ms": 2.222,
+          "reflection_ms": 4.569,
+          "report_ms": 1.211
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 1,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 97.265,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "preexisting_violation",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.053,
+          "copy_ms": 35.037,
+          "edit_ms": 3.913,
+          "inspect_ms": 3.827,
+          "plan_ms": 2.073,
+          "policy_ms": 0.001,
+          "post_validation_ms": 2.944,
+          "reflection_ms": 4.393,
+          "report_ms": 1.452
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": false,
+        "elapsed_ms": 116.938,
+        "human_escalation": true,
+        "new_violations": [
+          "new:error:sim_clearance"
+        ],
+        "persisted_new_violations": 0,
+        "recovery": "restored_full_workspace_checkpoint",
+        "recovery_ms": 21.041,
+        "repeat": 3,
+        "rollback_succeeded": true,
+        "scenario": "introduced_violation",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 1.971,
+          "copy_ms": 32.95,
+          "edit_ms": 3.758,
+          "inspect_ms": 3.876,
+          "plan_ms": 3.383,
+          "policy_ms": 0.001,
+          "post_validation_ms": 2.422,
+          "recovery_ms": 21.041,
+          "reflection_ms": 4.767,
+          "report_ms": 1.395
+        },
+        "status": "ROLLED_BACK",
+        "tool_calls": 3,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 104.626,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "transient_validator_failure",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.438,
+          "copy_ms": 35.78,
+          "edit_ms": 4.393,
+          "inspect_ms": 4.04,
+          "plan_ms": 2.092,
+          "policy_ms": 0.002,
+          "post_validation_ms": 4.081,
+          "reflection_ms": 5.269,
+          "report_ms": 1.259
+        },
+        "status": "VERIFIED",
+        "tool_calls": 4,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": false,
+        "elapsed_ms": 122.209,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "restored_full_workspace_checkpoint",
+        "recovery_ms": 23.756,
+        "repeat": 3,
+        "rollback_succeeded": true,
+        "scenario": "persistent_post_failure",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.082,
+          "copy_ms": 36.477,
+          "edit_ms": 3.914,
+          "inspect_ms": 4.069,
+          "plan_ms": 2.128,
+          "policy_ms": 0.002,
+          "post_validation_ms": 2.882,
+          "recovery_ms": 23.756,
+          "reflection_ms": 5.85,
+          "report_ms": 1.346
+        },
+        "status": "VALIDATION_UNAVAILABLE",
+        "tool_calls": 4,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 64.659,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "validator_unavailable",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 0.322,
+          "copy_ms": 34.008,
+          "inspect_ms": 3.879,
+          "plan_ms": 2.167,
+          "policy_ms": 0.002,
+          "report_ms": 1.376
+        },
+        "status": "VALIDATION_UNAVAILABLE",
+        "tool_calls": 1,
+        "validation_available": false
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 10.396,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "missing_approval",
+        "stage_latency_ms": {
+          "plan_ms": 2.328,
+          "policy_ms": 0.006,
+          "report_ms": 1.229
+        },
+        "status": "NEEDS_APPROVAL",
+        "tool_calls": 0,
+        "validation_available": false
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [],
+        "completed": false,
+        "elapsed_ms": 72.471,
+        "human_escalation": true,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "out_of_bounds",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.04,
+          "copy_ms": 34.466,
+          "edit_ms": 1.125,
+          "inspect_ms": 3.757,
+          "plan_ms": 2.102,
+          "policy_ms": 0.001,
+          "report_ms": 1.301
+        },
+        "status": "REJECTED",
+        "tool_calls": 2,
+        "validation_available": true
+      },
+      {
+        "baseline_violation_count": 0,
+        "changed_files": [
+          "demo_board.kicad_pcb"
+        ],
+        "completed": true,
+        "elapsed_ms": 99.274,
+        "human_escalation": false,
+        "new_violations": [],
+        "persisted_new_violations": 0,
+        "recovery": "none",
+        "recovery_ms": 0.0,
+        "repeat": 3,
+        "rollback_succeeded": false,
+        "scenario": "duplicate_request",
+        "stage_latency_ms": {
+          "baseline_validation_ms": 2.059,
+          "copy_ms": 35.088,
+          "edit_ms": 4.119,
+          "inspect_ms": 4.281,
+          "plan_ms": 2.149,
+          "policy_ms": 0.001,
+          "post_validation_ms": 2.347,
+          "reflection_ms": 4.54,
+          "report_ms": 1.284
+        },
+        "status": "VERIFIED",
+        "tool_calls": 3,
+        "validation_available": true
+      }
+    ]
+  },
+  "sample_size_per_approach": 27,
+  "scenario_count": 9,
+  "schema_version": 1,
+  "tasks": [
+    "clean_success",
+    "preexisting_violation",
+    "introduced_violation",
+    "transient_validator_failure",
+    "persistent_post_failure",
+    "validator_unavailable",
+    "missing_approval",
+    "out_of_bounds",
+    "duplicate_request"
+  ],
+  "timestamp_utc": "2026-10-25T06:28:31+00:00"
+}
